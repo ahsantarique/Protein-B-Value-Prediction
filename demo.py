@@ -39,7 +39,7 @@ other = 20
 
 def prepareDataSet():
 
-	SAMPLE_INTERVAL = 10
+	SAMPLE_INTERVAL = 100
 	MAX_FILE_COUNT = 5000
 
 	FEATURE_DIMENSION = 3*len(amino_acids)
@@ -161,7 +161,8 @@ def splitMetrics(clf, X, y):
 def crossValidate(clf, X, y):
 	# score = make_scorer(p, greater_is_better=True)
 	scores = cross_val_score(clf, X, y, cv=10, scoring='neg_mean_squared_error')
-	print(scores)
+	print("*******************")
+	print("Negative mean_squared_error of 10 fold cross_validation", scores)
 
 
 def main():
