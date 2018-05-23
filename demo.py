@@ -39,7 +39,7 @@ other = 20
 
 def prepareDataSet():
 
-	SAMPLE_INTERVAL = 100
+	SAMPLE_INTERVAL = 10
 	MAX_FILE_COUNT = 5000
 
 	FEATURE_DIMENSION = 3*len(amino_acids)
@@ -153,7 +153,7 @@ def splitMetrics(clf, X, y):
 	gc.collect()
 
 	print(p(y_train, y_train_pred))
-	#print(mean_squared_error(y_train, y_train_pred))
+	print(mean_squared_error(y_train, y_train_pred))
 	print(p(y_test, y_test_pred))
 
 
@@ -173,8 +173,8 @@ def main():
 	# clf = svr() # or 
 	clf = neuralNet()
 
-	#splitMetrics(clf, X, y) # or 
-	crossValidate(clf, X, y)
+	splitMetrics(clf, X, y) # or 
+	# crossValidate(clf, X, y)
 
 	# print(len(y))
 
@@ -184,5 +184,5 @@ def main():
 	# clf = SVR(C=c, epsilon=eps)
 	# # clf.fit(X[:20], y[:20])
 
-
-main()
+if __name__ == "__main__":
+	main()
