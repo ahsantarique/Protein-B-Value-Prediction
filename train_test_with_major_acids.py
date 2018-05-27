@@ -1,4 +1,5 @@
 import os
+import math
 import numpy as np
 from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_score
@@ -40,9 +41,11 @@ other = 20
 def prepareDataSet():
 
 	SAMPLE_INTERVAL = 10
-	MAX_FILE_COUNT = 5000
+	MAX_FILE_COUNT = 1000
 
-	FEATURE_DIMENSION = 3*len(amino_acids)
+	ONE_HOT_VECTOR_COUNT = 3
+	EXTRA_FEATURES = 1
+	FEATURE_DIMENSION = ONE_HOT_VECTOR_COUNT*len(amino_acids) + EXTRA_FEATURES;
 
 	X = np.empty((0,FEATURE_DIMENSION), float)
 	y = np.empty((0), float)
@@ -73,9 +76,8 @@ def prepareDataSet():
 
 			sampleCount += 1
 			if(sampleCount % SAMPLE_INTERVAL == 0):
-				sampleCount = 0
 
-				featureVector = extractFeature(freq, totalFreq, totalAcids, acid)
+				featureVector = extractFeature(freq, totalFreq, totalAcids, acid, sampleCount)
 
 				# print(featureVector)
 
@@ -91,7 +93,7 @@ def prepareDataSet():
 
 def calculateFrequency(input):
 		freq={acid:0 for acid in amino_acids.keys()}
-		totalAcids = 0;
+		totalAcids = 0
 		for(acid, bValue) in input:
 			if(acid not in amino_acids):
 				acid = "other"
@@ -101,25 +103,29 @@ def calculateFrequency(input):
 
 			totalAcids += 1
 
+
 		return totalAcids, freq;
 
 
 
-def extractFeature(freq, totalFreq, totalAcids, acid_name):
+def extractFeature(freq, totalFreq, totalAcids, acid_name, acidPosition):
+	# probability top
 	featureVector = [(freq[acid]*1.0/totalAcids) for acid in amino_acids.keys()]
 
-
+	# probability bottom
  	featureVector.extend([totalFreq[acid]*1.0/totalAcids for acid in amino_acids.keys()])
 
-
+ 	#one hot encoding
  	if acid_name in amino_acids:
  		x = np.array([acid for acid in amino_acids.keys()]) == acid_name
  	else:
  		x = np.array([acid for acid in amino_acids.keys()]) == "other"
 
  	# print(acid_name, x)
-
  	featureVector.extend(x)
+
+ 	#length ratio
+ 	featureVector.extend(np.array([acidPosition*1.0/totalAcids])) # extra feature
 
 	return np.array([featureVector])
 
@@ -129,7 +135,7 @@ def p(y_pred,y_true):
 
 
 def neuralNet():
-	return MLPRegressor(hidden_layer_sizes=(100,), activation='relu', 
+	return MLPRegressor(hidden_layer_sizes=(20,50), activation='relu', 
                     alpha=0.1, batch_size=256, early_stopping=True, 
                     learning_rate_init=0.01, solver='adam', learning_rate='adaptive', nesterovs_momentum=True, 
                     max_iter=200, tol=1e-8, verbose=True, validation_fraction=0.1)
@@ -159,8 +165,9 @@ def splitMetrics(clf, X, y):
 
 
 def crossValidate(clf, X, y):
-	# score = make_scorer(p, greater_is_better=True)
-	scores = cross_val_score(clf, X, y, cv=10, scoring='neg_mean_squared_error')
+	score = make_scorer(p, greater_is_better=True)
+	scores = cross_val_score(clf, X, y, cv=10, scoring=score)
+	# scores = cross_val_score(clf, X, y, cv=10, scoring='neg_mean_squared_error')
 	print("*******************")
 	print("Negative mean_squared_error of 10 fold cross_validation", scores)
 
@@ -168,8 +175,9 @@ def crossValidate(clf, X, y):
 def main():
 	X, y = prepareDataSet()
 
-	y = (y - np.mean(y)) / np.std(y)
-	
+	# y = (y - np.mean(y)) / np.std(y)
+	for i in range(len(y)):
+		y[i] = math.log(y[i])
 	# clf = svr() # or 
 	clf = neuralNet()
 

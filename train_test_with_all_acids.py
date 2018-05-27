@@ -133,4 +133,5 @@ def main():
 	print(scores, "std = " , scores.std(), "mean = " ,  scores.mean())
 
 
-main()
+if __name__ == "__main__":
+	main()
